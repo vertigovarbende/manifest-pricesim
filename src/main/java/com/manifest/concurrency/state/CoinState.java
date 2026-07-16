@@ -10,7 +10,7 @@ import java.util.List;
  * @author batuhan
  */
 
-public interface CoinStore {
+public interface CoinState {
 
     CoinSnapshot apply(PriceUpdateTask task);
 

@@ -13,7 +13,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author batuhan
  */
 
-public final class LockingCoinStore extends AbstractCoinStore {
+public final class SafeCoinState extends AbstractCoinState {
 
     private final Map<String, ReentrantLock> locks = createLocks();
 

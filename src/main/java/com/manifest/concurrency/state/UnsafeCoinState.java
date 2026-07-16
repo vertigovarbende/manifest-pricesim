@@ -7,7 +7,7 @@ import com.manifest.concurrency.model.PriceUpdateTask;
  * @author batuhan
  */
 
-public final class UnsafeCoinStore extends AbstractCoinStore {
+public final class UnsafeCoinState extends AbstractCoinState {
 
     public CoinSnapshot apply(PriceUpdateTask task) {
         MutableCoin coin = coins.get(task.coinId());
