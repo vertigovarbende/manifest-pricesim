@@ -2,6 +2,9 @@ package com.manifest.concurrency.counter.impl;
 
 import com.manifest.concurrency.counter.TaskCounter;
 
+/**
+ * @author Erdem Yusuf
+ */
 public class UnsafeTaskCounter implements TaskCounter {
 
     private long value;
