@@ -101,7 +101,7 @@ State package'i yeniden tasarlanacak.
 - [ ] ConcurrentHashMap + Lock yaklaşımı
 
 ---
-
+ 
 # TASK-4. Producer - Consumer Tasarımı
 
 Producer / Consumer mimarisi yeniden düzenlenecek.
