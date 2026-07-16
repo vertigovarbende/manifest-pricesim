@@ -29,11 +29,12 @@ Projedeki mevcut kod yapısını daha okunabilir, sürdürülebilir ve genişlet
 - [ ] Naming standartlarının düzenlenmesi
 - [ ] Gereksiz kodların temizlenmesi
 
-# 1. GitHub
+# TASK-1. GitHub
 
 ## Pull Request Template
 
 - [ ] PULL_REQUEST_TEMPLATE.md hazırlanacak
+- [ ] README.md hazırlanacak
 
 İçerik örneği
 
@@ -44,7 +45,7 @@ Projedeki mevcut kod yapısını daha okunabilir, sürdürülebilir ve genişlet
 - Checklist
 
 ---
-# 2. Package Standardı
+# TASK-2. Package Standardı
 
 Proje package yapısı standart hale getirilecek.
 
@@ -71,7 +72,7 @@ com.manifest.concurrency
 
 ---
 
-# 3. 'state' Package Tasarımı
+# TASK-3. 'state' Package Tasarımı
 
 State package'i yeniden tasarlanacak.
 
@@ -101,7 +102,7 @@ State package'i yeniden tasarlanacak.
 
 ---
 
-# 4. Producer - Consumer Tasarımı
+# TASK-4. Producer - Consumer Tasarımı
 
 Producer / Consumer mimarisi yeniden düzenlenecek.
 
@@ -130,7 +131,7 @@ Producer / Consumer mimarisi yeniden düzenlenecek.
 
 ---
 
-# 5. REST API & Swagger
+# TASK-5. REST API & Swagger
 
 ## REST API
 
@@ -159,7 +160,7 @@ Producer / Consumer mimarisi yeniden düzenlenecek.
 
 ---
 
-# 6. Testler
+# TASK-6. Testler
 
 ## Unit Test
 
