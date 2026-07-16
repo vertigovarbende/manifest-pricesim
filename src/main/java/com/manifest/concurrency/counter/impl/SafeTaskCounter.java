@@ -2,12 +2,12 @@ package com.manifest.concurrency.counter.impl;
 
 import com.manifest.concurrency.counter.TaskCounter;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * @author Erdem Yusuf
  */
-import java.util.concurrent.atomic.AtomicLong;
-
-public class SafeTaskCounter implements TaskCounter {
+public final class SafeTaskCounter implements TaskCounter {
 
     private final AtomicLong value = new AtomicLong();
 
