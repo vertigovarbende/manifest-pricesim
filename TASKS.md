@@ -129,6 +129,15 @@ Producer / Consumer mimarisi yeniden düzenlenecek.
 - [ ] Graceful shutdown
 - [ ] Bekleyen görevlerin tamamlanması
 
+### SimulationEngine
+
+- [ ] SimulationEngine sınıfı oluşturulması
+- [ ] SimulationEngine sınıfının Worker Thread yönetimi
+- [ ] SimulationEngine sınıfının Task üretimi
+- [ ] SimulationEngine sınıfının Task tamamlanma kontrolü
+- [ ] SimulationEngine sınıfının Graceful shutdown
+- [ ] SimulationEngine sınıfının Bekleyen görevlerin tamamlanması
+
 ---
 
 # TASK-5. REST API & Swagger
