@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.Locale;
 import java.util.Map;
@@ -77,6 +78,16 @@ public class GlobalExceptionHandler {
         String key = ex.getMessage() != null && ex.getMessage().contains("interrupted") ? "simulation.error.interrupted" : "simulation.error.failed";
         String message = messageSource.getMessage(key, null, ex.getMessage(), locale);
         return error(HttpStatus.INTERNAL_SERVER_ERROR, message, request);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ConErrorResponse> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        log.error(ex.getMessage(), ex);
+        String message = "Invalid request parameter: " + ex.getName();
+        if ("threadMode".equals(ex.getName())) {
+            message = "Invalid threadMode. Allowed values: PLATFORM, VIRTUAL";
+        }
+        return error(HttpStatus.BAD_REQUEST, message, request);
     }
 
     @ExceptionHandler(Exception.class)

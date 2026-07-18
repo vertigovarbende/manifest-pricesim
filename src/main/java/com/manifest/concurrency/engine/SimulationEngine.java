@@ -32,7 +32,8 @@ public class SimulationEngine {
     private final TaskConsumer consumer;
     private final InvariantChecker checker;
 
-    public RunStats run(String mode,
+    public RunStats run(String simulationMode,
+                        ThreadMode threadMode,
                         List<PriceUpdateTask> tasks,
                         int workers,
                         Map<String, ExpectedCoinResponse> expected,
@@ -41,10 +42,7 @@ public class SimulationEngine {
                         TaskQueue queue
     ) {
 
-        /*
-            we can put virtual thread support
-         */
-        ExecutorService executor = Executors.newFixedThreadPool(workers, new NamedThreadFactory(mode));
+        ExecutorService executor = createExecutor(workers, simulationMode, threadMode);
 
         // create futures
         List<Future<?>> futures = new ArrayList<>();
@@ -74,9 +72,7 @@ public class SimulationEngine {
 
         List<CoinSnapshot> actual = state.snapshots();
 
-        // invariant check
-        // expectedTaskCount shouldn't be task.size() !!!! - i am gonna find sth for that
-        InvariantReport invariantReport = checker.check(tasks.size(), tasks.size(), expected, actual);
+        InvariantReport invariantReport = checker.check(tasks.size(), counter.value(), expected, actual);
 
         // RunStats variables
         long durationNanos = System.nanoTime() - started;
@@ -84,7 +80,8 @@ public class SimulationEngine {
         double throughputPerSecond = counter.value() / (durationNanos / 1_000_000_000.0);
 
         return RunStats.builder()
-                .mode(mode)
+                .mode(simulationMode)
+                .threadMode(threadMode)
                 .durationNanos(durationNanos)
                 .durationMillis(durationMillis)
                 .throughputPerSecond(throughputPerSecond)
@@ -93,6 +90,16 @@ public class SimulationEngine {
                 .invariant(invariantReport)
                 .build();
 
+    }
+
+    private ExecutorService createExecutor(int workers, String simulationMode, ThreadMode threadMode) {
+        ThreadFactory threadFactory = new NamedThreadFactory(simulationMode, threadMode);
+
+        if (threadMode == ThreadMode.VIRTUAL) {
+            return Executors.newThreadPerTaskExecutor(threadFactory);
+        }
+
+        return Executors.newFixedThreadPool(workers, threadFactory);
     }
 
     private void waitForWorkers(List<Future<?>> workerFutures) throws InterruptedException {

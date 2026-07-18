@@ -5,6 +5,7 @@ import com.manifest.concurrency.counter.impl.UnsafeTaskCounter;
 import com.manifest.concurrency.engine.SimulationEngine;
 import com.manifest.concurrency.engine.TaskGenerator;
 import com.manifest.concurrency.engine.TaskQueue;
+import com.manifest.concurrency.engine.ThreadMode;
 import com.manifest.concurrency.exception.SimulationAlreadyRunningException;
 import com.manifest.concurrency.exception.SimulationNotFoundException;
 import com.manifest.concurrency.metrics.ExpectedResultCalculator;
@@ -38,12 +39,19 @@ public class SimulationService {
     private final AtomicReference<SimulationResult> latestStats = new AtomicReference<>();
     private final AtomicReference<List<CoinSnapshot>> latestCoin = new AtomicReference<>();
 
-    public SimulationResult simulate(int updates, int workers, long seed) {
+    public SimulationResult simulate(int updates, int workers, long seed, ThreadMode threadMode) {
         if (!simulationLock.tryLock()) {
             throw new SimulationAlreadyRunningException("Simulation is already running");
         }
 
         try {
+            ThreadMode selectedThreadMode;
+            if (threadMode == null) {
+                selectedThreadMode = ThreadMode.PLATFORM;
+            } else {
+                selectedThreadMode = threadMode;
+            }
+
             // Generate PriceUpdateTasks
             List<PriceUpdateTask> tasks = taskGenerator.generate(updates, seed);
 
@@ -52,15 +60,16 @@ public class SimulationService {
             Map<String, ExpectedCoinResponse> expected = expectedResultCalculator.calculateExpectedResult(tasks);
 
             // Create TaskQueue
-            TaskQueue queue = new TaskQueue(tasks.size() + workers);
+            TaskQueue unsafeQueue = new TaskQueue(tasks.size() + workers);
+            TaskQueue safeQueue = new TaskQueue(tasks.size() + workers);
 
             // Start simulations
             /*
                 - We may create Enum for different types of simulations ???
                 - i put 'expected' because we gonna use 'expected' for invariant violation report in SIMULATION ENGINE !!!
              */
-            RunStats unsafeRun = simulationEngine.run("UNSAFE", tasks, workers, expected, new UnsafeCoinState(), new UnsafeTaskCounter(), queue);
-            RunStats safeRun = simulationEngine.run("SAFE", tasks, workers, expected, new SafeCoinState(), new SafeTaskCounter(), queue);
+            RunStats unsafeRun = simulationEngine.run("UNSAFE", selectedThreadMode, tasks, workers, expected, new UnsafeCoinState(), new UnsafeTaskCounter(), unsafeQueue);
+            RunStats safeRun = simulationEngine.run("SAFE", selectedThreadMode, tasks, workers, expected, new SafeCoinState(), new SafeTaskCounter(), safeQueue);
 
             // Create SimulationResult
             SimulationResult result = SimulationResult.builder()
