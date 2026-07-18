@@ -1,4 +1,4 @@
-package com.manifest.concurrency.api;
+package com.manifest.concurrency.api.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
