@@ -19,6 +19,7 @@ public record RunStats(
         long durationNanos,
         double durationMillis,
         double throughputPerSecond,
+        double elapsedMs,
         long processedTaskCount,
         List<CoinSnapshot> coins,
         InvariantReport invariant
@@ -26,6 +27,12 @@ public record RunStats(
     // copy the list to make it immutable
     public RunStats {
         coins = List.copyOf(coins);
+    }
+
+    public long totalUpdateCount() {
+        return coins.stream()
+                .mapToLong(CoinSnapshot::updateCount)
+                .sum();
     }
 
 }

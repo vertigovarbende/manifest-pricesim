@@ -2,6 +2,7 @@ package com.manifest.concurrency.api;
 
 import com.manifest.concurrency.api.response.ConResponse;
 import com.manifest.concurrency.engine.ThreadMode;
+import com.manifest.concurrency.metrics.stats.Benchmark;
 import com.manifest.concurrency.metrics.stats.SimulationResult;
 import com.manifest.concurrency.model.CoinSnapshot;
 import com.manifest.concurrency.service.SimulationService;
@@ -39,6 +40,11 @@ public class SimulationController implements SimulationControllerDocs {
     @GetMapping("/stats")
     public ConResponse<SimulationResult> stats() {
         return ConResponse.successOf(service.stats());
+    }
+
+    @GetMapping("/benchmarks")
+    public ConResponse<List<Benchmark>> benchmark() {
+        return ConResponse.successOf(service.benchmarks());
     }
 
 }

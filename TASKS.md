@@ -138,6 +138,8 @@ Producer / Consumer mimarisi yeniden düzenlenecek.
 - [ ] SimulationEngine sınıfının Graceful shutdown
 - [ ] SimulationEngine sınıfının Bekleyen görevlerin tamamlanması
 
+### Throughput hesabı
+
 ---
 
 # TASK-5. REST API & Swagger
