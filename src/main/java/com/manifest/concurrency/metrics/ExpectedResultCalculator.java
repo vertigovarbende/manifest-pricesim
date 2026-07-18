@@ -4,12 +4,14 @@ import com.manifest.concurrency.model.CoinSnapshot;
 import com.manifest.concurrency.model.ExpectedCoinResponse;
 import com.manifest.concurrency.model.PriceUpdateTask;
 import com.manifest.concurrency.state.CoinCatalog;
+import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@Component
 public class ExpectedResultCalculator {
 
     public Map<String, ExpectedCoinResponse> calculateExpectedResult(
