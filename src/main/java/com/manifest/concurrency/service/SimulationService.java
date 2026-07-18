@@ -6,9 +6,11 @@ import com.manifest.concurrency.engine.SimulationEngine;
 import com.manifest.concurrency.engine.TaskGenerator;
 import com.manifest.concurrency.engine.TaskQueue;
 import com.manifest.concurrency.exception.SimulationAlreadyRunningException;
+import com.manifest.concurrency.exception.SimulationNotFoundException;
 import com.manifest.concurrency.metrics.ExpectedResultCalculator;
 import com.manifest.concurrency.metrics.stats.RunStats;
 import com.manifest.concurrency.metrics.stats.SimulationResult;
+import com.manifest.concurrency.model.CoinSnapshot;
 import com.manifest.concurrency.model.ExpectedCoinResponse;
 import com.manifest.concurrency.model.PriceUpdateTask;
 import com.manifest.concurrency.state.SafeCoinState;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -31,7 +34,9 @@ public class SimulationService {
     private final ExpectedResultCalculator expectedResultCalculator;
     private final TaskGenerator taskGenerator;
     private final SimulationEngine simulationEngine;
-    private final ReentrantLock simulationLock = new ReentrantLock();  // AtomicBoolean??
+    private final ReentrantLock simulationLock = new ReentrantLock();// AtomicBoolean??
+    private final AtomicReference<SimulationResult> latestStats = new AtomicReference<>();
+    private final AtomicReference<List<CoinSnapshot>> latestCoin = new AtomicReference<>();
 
     public SimulationResult simulate(int updates, int workers, long seed) {
         if (!simulationLock.tryLock()) {
@@ -68,7 +73,8 @@ public class SimulationService {
                     .safeRun(safeRun)
                     .build();
 
-            // We need to put lastSafeCoins, lastStats
+            latestStats.set(result);
+            latestCoin.set(result.safeRun().coins());
             return result;
 
         } finally {
@@ -77,5 +83,18 @@ public class SimulationService {
 
     }
 
+    public List<CoinSnapshot> coins() {
+        List<CoinSnapshot> latestCoin = this.latestCoin.get();
+        if (latestCoin == null)
+            throw new SimulationNotFoundException("Simulation not found");
+        return latestCoin;
+    }
 
+    public SimulationResult stats() {
+        SimulationResult result = this.latestStats.get();
+        if (result == null)
+            throw new SimulationNotFoundException("Simulation not found");
+        return result;
+    }
 }
+
