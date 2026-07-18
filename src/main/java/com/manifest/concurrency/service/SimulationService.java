@@ -6,7 +6,6 @@ import com.manifest.concurrency.engine.SimulationEngine;
 import com.manifest.concurrency.engine.TaskGenerator;
 import com.manifest.concurrency.engine.TaskQueue;
 import com.manifest.concurrency.engine.ThreadMode;
-import com.manifest.concurrency.exception.InvalidThreadModeException;
 import com.manifest.concurrency.exception.SimulationAlreadyRunningException;
 import com.manifest.concurrency.exception.SimulationNotFoundException;
 import com.manifest.concurrency.metrics.ExpectedResultCalculator;
@@ -21,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
@@ -41,13 +39,13 @@ public class SimulationService {
     private final AtomicReference<SimulationResult> latestStats = new AtomicReference<>();
     private final AtomicReference<List<CoinSnapshot>> latestCoin = new AtomicReference<>();
 
-    public SimulationResult simulate(int updates, int workers, long seed, String threadMode) {
+    public SimulationResult simulate(int updates, int workers, long seed, ThreadMode threadMode) {
         if (!simulationLock.tryLock()) {
             throw new SimulationAlreadyRunningException("Simulation is already running");
         }
 
         try {
-            ThreadMode selectedThreadMode = parseThreadMode(threadMode);
+            ThreadMode selectedThreadMode = threadMode == null ? ThreadMode.PLATFORM : threadMode;
 
             // Generate PriceUpdateTasks
             List<PriceUpdateTask> tasks = taskGenerator.generate(updates, seed);
@@ -87,18 +85,6 @@ public class SimulationService {
             simulationLock.unlock();
         }
 
-    }
-
-    private ThreadMode parseThreadMode(String threadMode) {
-        if (threadMode == null || threadMode.isBlank()) {
-            return ThreadMode.PLATFORM;
-        }
-
-        try {
-            return ThreadMode.valueOf(threadMode.trim().toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException exception) {
-            throw new InvalidThreadModeException("Invalid threadMode. Allowed values: PLATFORM, VIRTUAL", exception);
-        }
     }
 
     public List<CoinSnapshot> coins() {

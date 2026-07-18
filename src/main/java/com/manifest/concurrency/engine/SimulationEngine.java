@@ -93,10 +93,7 @@ public class SimulationEngine {
     }
 
     private ExecutorService createExecutor(int workers, String simulationMode, ThreadMode threadMode) {
-        ThreadFactory threadFactory = switch (threadMode) {
-            case VIRTUAL -> NamedThreadFactory.virtual(simulationMode);
-            case PLATFORM -> NamedThreadFactory.platform(simulationMode);
-        };
+        ThreadFactory threadFactory = new NamedThreadFactory(simulationMode, threadMode);
 
         if (threadMode == ThreadMode.VIRTUAL) {
             return Executors.newThreadPerTaskExecutor(threadFactory);

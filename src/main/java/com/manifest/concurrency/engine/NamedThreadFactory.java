@@ -1,32 +1,26 @@
 package com.manifest.concurrency.engine;
 
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 final class NamedThreadFactory implements ThreadFactory {
 
-    private final ThreadFactory delegate;
+    private final String prefix;
+    private final ThreadMode threadMode;
+    private final AtomicInteger next = new AtomicInteger(1);
 
-    private NamedThreadFactory(ThreadFactory delegate) {
-        this.delegate = delegate;
-    }
-
-    static ThreadFactory platform(String prefix) {
-        return new NamedThreadFactory(Thread.ofPlatform()
-                .name(workerPrefix(prefix), 1)
-                .factory());
-    }
-
-    static ThreadFactory virtual(String prefix) {
-        return new NamedThreadFactory(Thread.ofVirtual()
-                .name(workerPrefix(prefix), 1)
-                .factory());
+    NamedThreadFactory(String prefix, ThreadMode threadMode) {
+        this.prefix = prefix;
+        this.threadMode = threadMode;
     }
 
     public Thread newThread(Runnable task) {
-        return delegate.newThread(task);
-    }
+        String name = prefix + "-worker-" + next.getAndIncrement();
 
-    private static String workerPrefix(String prefix) {
-        return prefix + "-worker-";
+        if (threadMode == ThreadMode.VIRTUAL) {
+            return Thread.ofVirtual().name(name).unstarted(task);
+        }
+
+        return Thread.ofPlatform().name(name).unstarted(task);
     }
 }

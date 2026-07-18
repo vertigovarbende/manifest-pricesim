@@ -1,6 +1,7 @@
 package com.manifest.concurrency.api;
 
 import com.manifest.concurrency.api.response.ConResponse;
+import com.manifest.concurrency.engine.ThreadMode;
 import com.manifest.concurrency.metrics.stats.SimulationResult;
 import com.manifest.concurrency.model.CoinSnapshot;
 import com.manifest.concurrency.service.SimulationService;
@@ -26,7 +27,7 @@ public class SimulationController implements SimulationControllerDocs {
     private final SimulationService service;
 
     @PostMapping("/simulate")
-    public ConResponse<SimulationResult> simulate(int updates, int workers, Long seed, String threadMode) {
+    public ConResponse<SimulationResult> simulate(int updates, int workers, Long seed, ThreadMode threadMode) {
         return ConResponse.successOf(service.simulate(updates, workers, seed, threadMode));
     }
 

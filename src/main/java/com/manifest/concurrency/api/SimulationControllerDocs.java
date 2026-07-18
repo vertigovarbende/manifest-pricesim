@@ -3,6 +3,7 @@ package com.manifest.concurrency.api;
 
 import com.manifest.concurrency.api.response.ConErrorResponse;
 import com.manifest.concurrency.api.response.ConResponse;
+import com.manifest.concurrency.engine.ThreadMode;
 import com.manifest.concurrency.model.CoinSnapshot;
 import com.manifest.concurrency.metrics.stats.SimulationResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -66,7 +67,7 @@ public interface SimulationControllerDocs {
             @Max(value = 42, message = "{validation.seed.max}") Long seed,
 
             @Parameter(description = "Thread mode: PLATFORM veya VIRTUAL", example = "PLATFORM")
-            @RequestParam(required = false, defaultValue = "PLATFORM") String threadMode
+            @RequestParam(required = false, defaultValue = "PLATFORM") ThreadMode threadMode
     );
 
 
