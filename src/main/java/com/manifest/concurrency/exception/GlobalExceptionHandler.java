@@ -108,6 +108,7 @@ public class GlobalExceptionHandler {
                 .status(status.value())
                 .path(request.getRequestURI())
                 .build();
+        log.error("ConErrorResponse code: {}", error.getCode());
         return ResponseEntity.status(status).body(error);
     }
 }

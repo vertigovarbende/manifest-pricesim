@@ -3,6 +3,7 @@ package com.manifest.concurrency.api.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -13,6 +14,7 @@ import java.util.UUID;
  */
 @Getter
 @Builder
+@Slf4j
 public class ConResponse<T> {
 
     @Builder.Default
@@ -28,18 +30,22 @@ public class ConResponse<T> {
 
     // A success response with no data
     public static <T> ConResponse<T> success(T response) {
-        return ConResponse.<T>builder()
+        ConResponse<T> conResponse = ConResponse.<T>builder()
                 .isSuccess(true)
                 .response(response)
                 .build();
+        log.info("ConResponse code: {}", conResponse.getCode());
+        return conResponse;
     }
 
     // Creates a success response with the specified response object
     public static <T> ConResponse<T> successOf(final T response) {
-        return ConResponse.<T>builder()
+        ConResponse<T> conResponse = ConResponse.<T>builder()
                 .isSuccess(true)
                 .response(response)
                 .build();
+        log.info("ConResponse code: {}", conResponse.getCode());
+        return conResponse;
     }
 
 }
