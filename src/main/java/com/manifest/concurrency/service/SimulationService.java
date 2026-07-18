@@ -6,6 +6,7 @@ import com.manifest.concurrency.engine.SimulationEngine;
 import com.manifest.concurrency.engine.TaskGenerator;
 import com.manifest.concurrency.engine.TaskQueue;
 import com.manifest.concurrency.engine.ThreadMode;
+import com.manifest.concurrency.exception.InvalidThreadModeException;
 import com.manifest.concurrency.exception.SimulationAlreadyRunningException;
 import com.manifest.concurrency.exception.SimulationNotFoundException;
 import com.manifest.concurrency.metrics.ExpectedResultCalculator;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
@@ -39,12 +41,14 @@ public class SimulationService {
     private final AtomicReference<SimulationResult> latestStats = new AtomicReference<>();
     private final AtomicReference<List<CoinSnapshot>> latestCoin = new AtomicReference<>();
 
-    public SimulationResult simulate(int updates, int workers, long seed) {
+    public SimulationResult simulate(int updates, int workers, long seed, String threadMode) {
         if (!simulationLock.tryLock()) {
             throw new SimulationAlreadyRunningException("Simulation is already running");
         }
 
         try {
+            ThreadMode selectedThreadMode = parseThreadMode(threadMode);
+
             // Generate PriceUpdateTasks
             List<PriceUpdateTask> tasks = taskGenerator.generate(updates, seed);
 
@@ -55,16 +59,14 @@ public class SimulationService {
             // Create TaskQueue
             TaskQueue unsafeQueue = new TaskQueue(tasks.size() + workers);
             TaskQueue safeQueue = new TaskQueue(tasks.size() + workers);
-            TaskQueue safeVirtualQueue = new TaskQueue(tasks.size() + workers);
 
             // Start simulations
             /*
                 - We may create Enum for different types of simulations ???
                 - i put 'expected' because we gonna use 'expected' for invariant violation report in SIMULATION ENGINE !!!
              */
-            RunStats unsafeRun = simulationEngine.run("UNSAFE", ThreadMode.PLATFORM, tasks, workers, expected, new UnsafeCoinState(), new UnsafeTaskCounter(), unsafeQueue);
-            RunStats safeRun = simulationEngine.run("SAFE", ThreadMode.PLATFORM, tasks, workers, expected, new SafeCoinState(), new SafeTaskCounter(), safeQueue);
-            RunStats safeVirtualRun = simulationEngine.run("SAFE_VIRTUAL", ThreadMode.VIRTUAL, tasks, workers, expected, new SafeCoinState(), new SafeTaskCounter(), safeVirtualQueue);
+            RunStats unsafeRun = simulationEngine.run("UNSAFE", selectedThreadMode, tasks, workers, expected, new UnsafeCoinState(), new UnsafeTaskCounter(), unsafeQueue);
+            RunStats safeRun = simulationEngine.run("SAFE", selectedThreadMode, tasks, workers, expected, new SafeCoinState(), new SafeTaskCounter(), safeQueue);
 
             // Create SimulationResult
             SimulationResult result = SimulationResult.builder()
@@ -75,7 +77,6 @@ public class SimulationService {
                     .expected(expected)
                     .unsafeRun(unsafeRun)
                     .safeRun(safeRun)
-                    .safeVirtualRun(safeVirtualRun)
                     .build();
 
             latestStats.set(result);
@@ -86,6 +87,18 @@ public class SimulationService {
             simulationLock.unlock();
         }
 
+    }
+
+    private ThreadMode parseThreadMode(String threadMode) {
+        if (threadMode == null || threadMode.isBlank()) {
+            return ThreadMode.PLATFORM;
+        }
+
+        try {
+            return ThreadMode.valueOf(threadMode.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            throw new InvalidThreadModeException("Invalid threadMode. Allowed values: PLATFORM, VIRTUAL", exception);
+        }
     }
 
     public List<CoinSnapshot> coins() {

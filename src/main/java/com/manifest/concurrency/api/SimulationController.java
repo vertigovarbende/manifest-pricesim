@@ -26,8 +26,8 @@ public class SimulationController implements SimulationControllerDocs {
     private final SimulationService service;
 
     @PostMapping("/simulate")
-    public ConResponse<SimulationResult> simulate(int updates, int workers, Long seed) {
-        return ConResponse.successOf(service.simulate(updates, workers, seed));
+    public ConResponse<SimulationResult> simulate(int updates, int workers, Long seed, String threadMode) {
+        return ConResponse.successOf(service.simulate(updates, workers, seed, threadMode));
     }
 
     @GetMapping("/coins")

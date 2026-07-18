@@ -79,6 +79,12 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.INTERNAL_SERVER_ERROR, message, request);
     }
 
+    @ExceptionHandler(InvalidThreadModeException.class)
+    public ResponseEntity<ConErrorResponse> handleInvalidThreadModeException(InvalidThreadModeException ex, HttpServletRequest request) {
+        log.error(ex.getMessage(), ex);
+        return error(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ConErrorResponse> handleException(Exception ex, HttpServletRequest request) {
         log.error(ex.getMessage(), ex);

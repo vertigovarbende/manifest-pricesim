@@ -63,7 +63,10 @@ public interface SimulationControllerDocs {
             @Parameter(description = "Tekrarlanabilir görev üretimi için seed değeri (1 - 42, varsayılan 42)", example = "42")
             @RequestParam(required = false, defaultValue = "42")
             @Min(value = 1, message = "{validation.seed.min}")
-            @Max(value = 42, message = "{validation.seed.max}") Long seed
+            @Max(value = 42, message = "{validation.seed.max}") Long seed,
+
+            @Parameter(description = "Thread mode: PLATFORM veya VIRTUAL", example = "PLATFORM")
+            @RequestParam(required = false, defaultValue = "PLATFORM") String threadMode
     );
 
 

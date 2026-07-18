@@ -32,7 +32,7 @@ public class SimulationEngine {
     private final TaskConsumer consumer;
     private final InvariantChecker checker;
 
-    public RunStats run(String mode,
+    public RunStats run(String simulationMode,
                         ThreadMode threadMode,
                         List<PriceUpdateTask> tasks,
                         int workers,
@@ -42,7 +42,7 @@ public class SimulationEngine {
                         TaskQueue queue
     ) {
 
-        ExecutorService executor = createExecutor(mode, workers, threadMode);
+        ExecutorService executor = createExecutor(workers, simulationMode, threadMode);
 
         // create futures
         List<Future<?>> futures = new ArrayList<>();
@@ -80,7 +80,7 @@ public class SimulationEngine {
         double throughputPerSecond = counter.value() / (durationNanos / 1_000_000_000.0);
 
         return RunStats.builder()
-                .mode(mode)
+                .mode(simulationMode)
                 .threadMode(threadMode)
                 .durationNanos(durationNanos)
                 .durationMillis(durationMillis)
@@ -92,12 +92,17 @@ public class SimulationEngine {
 
     }
 
-    private ExecutorService createExecutor(String mode, int workers, ThreadMode threadMode) {
+    private ExecutorService createExecutor(int workers, String simulationMode, ThreadMode threadMode) {
+        ThreadFactory threadFactory = switch (threadMode) {
+            case VIRTUAL -> NamedThreadFactory.virtual(simulationMode);
+            case PLATFORM -> NamedThreadFactory.platform(simulationMode);
+        };
+
         if (threadMode == ThreadMode.VIRTUAL) {
-            return Executors.newVirtualThreadPerTaskExecutor();
+            return Executors.newThreadPerTaskExecutor(threadFactory);
         }
 
-        return Executors.newFixedThreadPool(workers, new NamedThreadFactory(mode));
+        return Executors.newFixedThreadPool(workers, threadFactory);
     }
 
     private void waitForWorkers(List<Future<?>> workerFutures) throws InterruptedException {

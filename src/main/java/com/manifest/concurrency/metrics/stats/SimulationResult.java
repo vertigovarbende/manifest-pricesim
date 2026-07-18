@@ -18,8 +18,7 @@ public record SimulationResult(
         int generatedTaskCount,
         Map<String, ExpectedCoinResponse> expected,
         RunStats unsafeRun,
-        RunStats safeRun,
-        RunStats safeVirtualRun
+        RunStats safeRun
 ) {
 
     // copy the map to make it immutable
