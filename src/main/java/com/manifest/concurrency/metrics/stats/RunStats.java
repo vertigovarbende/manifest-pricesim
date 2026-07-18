@@ -1,5 +1,6 @@
 package com.manifest.concurrency.metrics.stats;
 
+import com.manifest.concurrency.engine.ThreadMode;
 import com.manifest.concurrency.metrics.invariant.InvariantReport;
 import com.manifest.concurrency.model.CoinSnapshot;
 import lombok.Builder;
@@ -14,6 +15,7 @@ import java.util.List;
 @Builder
 public record RunStats(
         String mode,
+        ThreadMode threadMode,
         long durationNanos,
         double durationMillis,
         double throughputPerSecond,

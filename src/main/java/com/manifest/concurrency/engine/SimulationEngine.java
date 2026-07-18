@@ -33,6 +33,7 @@ public class SimulationEngine {
     private final InvariantChecker checker;
 
     public RunStats run(String mode,
+                        ThreadMode threadMode,
                         List<PriceUpdateTask> tasks,
                         int workers,
                         Map<String, ExpectedCoinResponse> expected,
@@ -41,10 +42,7 @@ public class SimulationEngine {
                         TaskQueue queue
     ) {
 
-        /*
-            we can put virtual thread support
-         */
-        ExecutorService executor = Executors.newFixedThreadPool(workers, new NamedThreadFactory(mode));
+        ExecutorService executor = createExecutor(mode, workers, threadMode);
 
         // create futures
         List<Future<?>> futures = new ArrayList<>();
@@ -74,9 +72,7 @@ public class SimulationEngine {
 
         List<CoinSnapshot> actual = state.snapshots();
 
-        // invariant check
-        // expectedTaskCount shouldn't be task.size() !!!! - i am gonna find sth for that
-        InvariantReport invariantReport = checker.check(tasks.size(), tasks.size(), expected, actual);
+        InvariantReport invariantReport = checker.check(tasks.size(), counter.value(), expected, actual);
 
         // RunStats variables
         long durationNanos = System.nanoTime() - started;
@@ -85,6 +81,7 @@ public class SimulationEngine {
 
         return RunStats.builder()
                 .mode(mode)
+                .threadMode(threadMode)
                 .durationNanos(durationNanos)
                 .durationMillis(durationMillis)
                 .throughputPerSecond(throughputPerSecond)
@@ -93,6 +90,14 @@ public class SimulationEngine {
                 .invariant(invariantReport)
                 .build();
 
+    }
+
+    private ExecutorService createExecutor(String mode, int workers, ThreadMode threadMode) {
+        if (threadMode == ThreadMode.VIRTUAL) {
+            return Executors.newVirtualThreadPerTaskExecutor();
+        }
+
+        return Executors.newFixedThreadPool(workers, new NamedThreadFactory(mode));
     }
 
     private void waitForWorkers(List<Future<?>> workerFutures) throws InterruptedException {

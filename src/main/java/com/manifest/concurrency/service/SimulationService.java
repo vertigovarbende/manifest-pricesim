@@ -5,6 +5,7 @@ import com.manifest.concurrency.counter.impl.UnsafeTaskCounter;
 import com.manifest.concurrency.engine.SimulationEngine;
 import com.manifest.concurrency.engine.TaskGenerator;
 import com.manifest.concurrency.engine.TaskQueue;
+import com.manifest.concurrency.engine.ThreadMode;
 import com.manifest.concurrency.exception.SimulationAlreadyRunningException;
 import com.manifest.concurrency.exception.SimulationNotFoundException;
 import com.manifest.concurrency.metrics.ExpectedResultCalculator;
@@ -52,15 +53,18 @@ public class SimulationService {
             Map<String, ExpectedCoinResponse> expected = expectedResultCalculator.calculateExpectedResult(tasks);
 
             // Create TaskQueue
-            TaskQueue queue = new TaskQueue(tasks.size() + workers);
+            TaskQueue unsafeQueue = new TaskQueue(tasks.size() + workers);
+            TaskQueue safeQueue = new TaskQueue(tasks.size() + workers);
+            TaskQueue safeVirtualQueue = new TaskQueue(tasks.size() + workers);
 
             // Start simulations
             /*
                 - We may create Enum for different types of simulations ???
                 - i put 'expected' because we gonna use 'expected' for invariant violation report in SIMULATION ENGINE !!!
              */
-            RunStats unsafeRun = simulationEngine.run("UNSAFE", tasks, workers, expected, new UnsafeCoinState(), new UnsafeTaskCounter(), queue);
-            RunStats safeRun = simulationEngine.run("SAFE", tasks, workers, expected, new SafeCoinState(), new SafeTaskCounter(), queue);
+            RunStats unsafeRun = simulationEngine.run("UNSAFE", ThreadMode.PLATFORM, tasks, workers, expected, new UnsafeCoinState(), new UnsafeTaskCounter(), unsafeQueue);
+            RunStats safeRun = simulationEngine.run("SAFE", ThreadMode.PLATFORM, tasks, workers, expected, new SafeCoinState(), new SafeTaskCounter(), safeQueue);
+            RunStats safeVirtualRun = simulationEngine.run("SAFE_VIRTUAL", ThreadMode.VIRTUAL, tasks, workers, expected, new SafeCoinState(), new SafeTaskCounter(), safeVirtualQueue);
 
             // Create SimulationResult
             SimulationResult result = SimulationResult.builder()
@@ -71,6 +75,7 @@ public class SimulationService {
                     .expected(expected)
                     .unsafeRun(unsafeRun)
                     .safeRun(safeRun)
+                    .safeVirtualRun(safeVirtualRun)
                     .build();
 
             latestStats.set(result);
