@@ -8,12 +8,14 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -39,33 +41,42 @@ public class GlobalExceptionHandler {
                         ConstraintViolation::getMessage,
                         (firstMessage, secondMessage) -> firstMessage
                 ));
-
-
-        return error(HttpStatus.BAD_REQUEST, ex.getMessage(), details, request);
+        Locale locale = LocaleContextHolder.getLocale();
+        String message = messageSource.getMessage("validation.failed", null, "Validation failed", locale);
+        return error(HttpStatus.BAD_REQUEST, message, details, request);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ConErrorResponse> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex, HttpServletRequest request) {
         log.error(ex.getMessage(), ex);
-        return error(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+        Locale locale = LocaleContextHolder.getLocale();
+        String message = messageSource.getMessage("validation.missing-parameter", new Object[]{ex.getParameterName()}, "Missing required parameter: " + ex.getParameterName(), locale);
+        return error(HttpStatus.BAD_REQUEST, message, request);
     }
 
     @ExceptionHandler(SimulationAlreadyRunningException.class)
     public ResponseEntity<ConErrorResponse> handleSimulationAlreadyRunningException(SimulationAlreadyRunningException ex, HttpServletRequest request) {
         log.error(ex.getMessage(), ex);
-        return error(HttpStatus.CONFLICT, ex.getMessage(), request);
+        Locale locale = LocaleContextHolder.getLocale();
+        String message = messageSource.getMessage("simulation.error.already-running", null, ex.getMessage(), locale);
+        return error(HttpStatus.CONFLICT, message, request);
     }
 
     @ExceptionHandler(SimulationNotFoundException.class)
     public ResponseEntity<ConErrorResponse> handleSimulationNotFoundException(SimulationNotFoundException ex, HttpServletRequest request) {
         log.error(ex.getMessage(), ex);
-        return error(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+        Locale locale = LocaleContextHolder.getLocale();
+        String message = messageSource.getMessage("simulation.error.not-found", null, ex.getMessage(), locale);
+        return error(HttpStatus.NOT_FOUND, message, request);
     }
 
     @ExceptionHandler(SimulationExecutionException.class)
     public ResponseEntity<ConErrorResponse> handleSimulationExecutionException(SimulationExecutionException ex, HttpServletRequest request) {
         log.error(ex.getMessage(), ex);
-        return error(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);
+        Locale locale = LocaleContextHolder.getLocale();
+        String key = ex.getMessage() != null && ex.getMessage().contains("interrupted") ? "simulation.error.interrupted" : "simulation.error.failed";
+        String message = messageSource.getMessage(key, null, ex.getMessage(), locale);
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, message, request);
     }
 
     @ExceptionHandler(Exception.class)

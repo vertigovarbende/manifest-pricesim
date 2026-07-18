@@ -52,18 +52,18 @@ public interface SimulationControllerDocs {
     ConResponse<SimulationResult> simulate(
             @Parameter(description = "İşlenecek fiyat güncelleme sayısı (1 - 100.000)", example = "10000")
             @RequestParam
-            @Min(value = 1, message = "Values min 1 olacak")
-            @Max(value = 100_000, message = "Values max 1 olacak") int updates,
+            @Min(value = 1, message = "{validation.updates.min}")
+            @Max(value = 100_000, message = "{validation.updates.max}") int updates,
 
             @Parameter(description = "Kullanılacak worker (thread) sayısı (1 - 16)", example = "4")
             @RequestParam
-            @Min(value = 1, message = "values min 1")
-            @Max(value = 16, message = "values max 1") int workers,
+            @Min(value = 1, message = "{validation.workers.min}")
+            @Max(value = 16, message = "{validation.workers.max}") int workers,
 
             @Parameter(description = "Tekrarlanabilir görev üretimi için seed değeri (1 - 42, varsayılan 42)", example = "42")
             @RequestParam(required = false, defaultValue = "42")
-            @Min(value = 1, message = "values min 1")
-            @Max(value = 42, message = "values max 42") Long seed
+            @Min(value = 1, message = "{validation.seed.min}")
+            @Max(value = 42, message = "{validation.seed.max}") Long seed
     );
 
 
