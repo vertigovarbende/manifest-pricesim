@@ -45,7 +45,12 @@ public class SimulationService {
         }
 
         try {
-            ThreadMode selectedThreadMode = threadMode == null ? ThreadMode.PLATFORM : threadMode;
+            ThreadMode selectedThreadMode;
+            if (threadMode == null) {
+                selectedThreadMode = ThreadMode.PLATFORM;
+            } else {
+                selectedThreadMode = threadMode;
+            }
 
             // Generate PriceUpdateTasks
             List<PriceUpdateTask> tasks = taskGenerator.generate(updates, seed);
