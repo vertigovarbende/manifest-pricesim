@@ -1,16 +1,20 @@
 package com.manifest.concurrency.api;
 
+import com.manifest.concurrency.api.request.BenchmarkRequest;
 import com.manifest.concurrency.api.response.ConResponse;
 import com.manifest.concurrency.engine.ThreadMode;
 import com.manifest.concurrency.metrics.stats.Benchmark;
+import com.manifest.concurrency.metrics.stats.BenchmarkReport;
 import com.manifest.concurrency.metrics.stats.SimulationResult;
 import com.manifest.concurrency.model.CoinSnapshot;
 import com.manifest.concurrency.service.SimulationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -42,9 +46,9 @@ public class SimulationController implements SimulationControllerDocs {
         return ConResponse.successOf(service.stats());
     }
 
-    @GetMapping("/benchmarks")
-    public ConResponse<List<Benchmark>> benchmark() {
-        return ConResponse.successOf(service.benchmarks());
+    @PostMapping("/benchmarks")
+    public ConResponse<BenchmarkReport> benchmark(@Valid @RequestBody BenchmarkRequest request) {
+        return ConResponse.successOf(service.benchmarks(request));
     }
 
 }

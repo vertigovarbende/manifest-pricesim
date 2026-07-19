@@ -1,15 +1,14 @@
 package com.manifest.concurrency.service;
 
+import com.manifest.concurrency.api.request.BenchmarkRequest;
 import com.manifest.concurrency.counter.impl.SafeTaskCounter;
 import com.manifest.concurrency.counter.impl.UnsafeTaskCounter;
-import com.manifest.concurrency.engine.SimulationEngine;
-import com.manifest.concurrency.engine.TaskGenerator;
-import com.manifest.concurrency.engine.TaskQueue;
-import com.manifest.concurrency.engine.ThreadMode;
+import com.manifest.concurrency.engine.*;
 import com.manifest.concurrency.exception.SimulationAlreadyRunningException;
 import com.manifest.concurrency.exception.SimulationNotFoundException;
 import com.manifest.concurrency.metrics.ExpectedResultCalculator;
 import com.manifest.concurrency.metrics.stats.Benchmark;
+import com.manifest.concurrency.metrics.stats.BenchmarkReport;
 import com.manifest.concurrency.metrics.stats.RunStats;
 import com.manifest.concurrency.metrics.stats.SimulationResult;
 import com.manifest.concurrency.model.CoinSnapshot;
@@ -37,10 +36,11 @@ public class SimulationService {
     private final ExpectedResultCalculator expectedResultCalculator;
     private final TaskGenerator taskGenerator;
     private final SimulationEngine simulationEngine;
+    private final BenchmarkEngine benchmarkEngine;
     private final ReentrantLock simulationLock = new ReentrantLock();// AtomicBoolean??
     private final AtomicReference<SimulationResult> latestStats = new AtomicReference<>();
     private final AtomicReference<List<CoinSnapshot>> latestCoin = new AtomicReference<>();
-    private final AtomicReference<List<Benchmark>> benchmarks = new AtomicReference<>(new ArrayList<>());
+
 
     public SimulationResult simulate(int updates, int workers, long seed, ThreadMode threadMode) {
         if (!simulationLock.tryLock()) {
@@ -83,17 +83,6 @@ public class SimulationService {
             latestStats.set(result);
             latestCoin.set(result.safeRun().coins());
 
-            // Create Benchmark
-            Benchmark benchmark = Benchmark.builder()
-                    .threadMode(selectedThreadMode)
-                    .updates(safeRun.totalUpdateCount())
-                    .workers(workers)
-                    .elapsedMs(safeRun.elapsedMs())
-                    .throughputPerSecond(safeRun.throughputPerSecond())
-                    .invariantPassed(safeRun.invariant().valid())
-                    .build();
-            benchmarks.get().add(benchmark);
-
             return result;
         } finally {
             simulationLock.unlock();
@@ -115,11 +104,8 @@ public class SimulationService {
         return result;
     }
 
-    public List<Benchmark> benchmarks() {
-        List<Benchmark> benchmarks = this.benchmarks.get();
-        if (benchmarks == null)
-            throw new SimulationNotFoundException("Simulation not found");
-        return benchmarks;
+    public BenchmarkReport benchmarks(BenchmarkRequest request) {
+        return benchmarkEngine.compare(request, taskGenerator, expectedResultCalculator);
     }
 }
 
