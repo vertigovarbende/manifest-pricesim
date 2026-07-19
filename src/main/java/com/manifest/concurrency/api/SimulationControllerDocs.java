@@ -116,7 +116,40 @@ public interface SimulationControllerDocs {
     ConResponse<SimulationResult> stats();
 
 
-    ConResponse<BenchmarkReport> benchmark(@Valid @RequestBody BenchmarkRequest request);
+    @Operation(
+            summary = "thread mode benchmark karşılaştırması yapar",
+            description = "Verilen updates, seed, workers listesi, warmupRuns ve measurementRuns parametrelerine göre " +
+                    "her ThreadMode (PLATFORM/VIRTUAL) ve her worker sayısı için önce warm-up çalıştırır, ardından " +
+                    "measurementRuns kadar ölçüm yapıp medyan süre/throughput değerlerini hesaplar. " +
+                    "Her kombinasyon için invariant kontrolünün geçip geçmediği de sonuçta yer alır."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Benchmark başarıyla tamamlandı",
+                    content = @Content(schema = @Schema(implementation = BenchmarkReport.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Geçersiz istek gövdesi (validation hatası)",
+                    content = @Content(schema = @Schema(implementation = ConErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Benchmark çalıştırılırken hata oluştu veya zaman aşımına uğradı",
+                    content = @Content(schema = @Schema(implementation = ConErrorResponse.class))
+            )
+    })
+    ConResponse<BenchmarkReport> benchmark(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Benchmark parametreleri: updates (1-100.000), workers listesi (her biri 1-8), " +
+                            "seed, warmupRuns (0-10) ve measurementRuns (1-20)",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = BenchmarkRequest.class))
+            )
+            @Valid @RequestBody BenchmarkRequest request
+    );
+
 }
 
 
