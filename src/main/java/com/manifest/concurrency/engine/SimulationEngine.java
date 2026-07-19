@@ -48,26 +48,20 @@ public class SimulationEngine {
         List<Future<?>> futures = new ArrayList<>();
 
         long started = System.nanoTime();
-        boolean completed = false;
+
         try {
             for (int i = 0; i < workers; i++) {
                 futures.add(executor.submit(() -> consumer.consume(queue, state, counter)));
             }
             producer.produce(tasks, queue, workers);
-            executor.shutdown();
 
+            executor.shutdown();
             waitForWorkers(futures);
-            if (!executor.awaitTermination(RUN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
-            }
-            completed = true;
         } catch (InterruptedException exception) {
-            executor.shutdownNow();
             Thread.currentThread().interrupt();
+            throw new SimulationExecutionException("Simulation interrupted", exception);
         } finally {
-            if (!completed) {
-                executor.shutdownNow();
-            }
+            shutdown(executor);
         }
 
         List<CoinSnapshot> actual = state.snapshots();
@@ -105,28 +99,39 @@ public class SimulationEngine {
     private void waitForWorkers(List<Future<?>> workerFutures) throws InterruptedException {
 
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(RUN_TIMEOUT_SECONDS);
-        for (Future<?> future : workerFutures) {
-            long remaining = deadline - System.nanoTime();
+        try {
+            for (Future<?> future : workerFutures) {
+                long remaining = deadline - System.nanoTime();
 
-            if (remaining <= 0) {
-                throw new SimulationExecutionException("Workers did not finish in time");
-            }
+                if (remaining <= 0) {
+                    throw new SimulationExecutionException("Workers did not finish in time");
+                }
 
-            try {
                 future.get(remaining, TimeUnit.NANOSECONDS);
-            } catch (ExecutionException exception) {
-                throw new SimulationExecutionException("A worker failed", exception.getCause());
-            } catch (TimeoutException exception) {
-                throw new SimulationExecutionException("Workers did not finish in time", exception);
             }
+        } catch (ExecutionException exception) {
+            cancelUnfinishedWorkers(workerFutures);
+            throw new SimulationExecutionException("A worker failed", exception.getCause());
+        } catch (TimeoutException exception) {
+            cancelUnfinishedWorkers(workerFutures);
+            throw new SimulationExecutionException("Workers did not finish in time", exception);
         }
     }
 
-    // Graceful shutdown - we can put this method into run() method
+    private void cancelUnfinishedWorkers(List<Future<?>> workerFutures) {
+        workerFutures.stream()
+                .filter(future -> !future.isDone())
+                .forEach(future -> future.cancel(true));
+    }
+
     private void shutdown(ExecutorService executor) {
+        if (executor.isTerminated()) {
+            return;
+        }
+
         executor.shutdown();
         try {
-            if (!executor.awaitTermination(RUN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+            if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
                 executor.shutdownNow();
             }
         } catch (InterruptedException e) {
