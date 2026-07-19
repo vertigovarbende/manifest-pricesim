@@ -71,6 +71,7 @@ public class SimulationEngine {
         // RunStats variables
         long durationNanos = System.nanoTime() - started;
         long durationMillis = durationNanos / 1_000_000;
+        double elapsedMs = durationNanos / 1_000_000.0;
         double throughputPerSecond = counter.value() / (durationNanos / 1_000_000_000.0);
 
         return RunStats.builder()
@@ -78,6 +79,7 @@ public class SimulationEngine {
                 .threadMode(threadMode)
                 .durationNanos(durationNanos)
                 .durationMillis(durationMillis)
+                .elapsedMs(elapsedMs)
                 .throughputPerSecond(throughputPerSecond)
                 .processedTaskCount(counter.value())
                 .coins(actual)

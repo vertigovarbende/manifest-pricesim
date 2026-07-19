@@ -1,14 +1,14 @@
 package com.manifest.concurrency.service;
 
+import com.manifest.concurrency.api.request.BenchmarkRequest;
 import com.manifest.concurrency.counter.impl.SafeTaskCounter;
 import com.manifest.concurrency.counter.impl.UnsafeTaskCounter;
-import com.manifest.concurrency.engine.SimulationEngine;
-import com.manifest.concurrency.engine.TaskGenerator;
-import com.manifest.concurrency.engine.TaskQueue;
-import com.manifest.concurrency.engine.ThreadMode;
+import com.manifest.concurrency.engine.*;
 import com.manifest.concurrency.exception.SimulationAlreadyRunningException;
 import com.manifest.concurrency.exception.SimulationNotFoundException;
 import com.manifest.concurrency.metrics.ExpectedResultCalculator;
+import com.manifest.concurrency.metrics.stats.Benchmark;
+import com.manifest.concurrency.metrics.stats.BenchmarkReport;
 import com.manifest.concurrency.metrics.stats.RunStats;
 import com.manifest.concurrency.metrics.stats.SimulationResult;
 import com.manifest.concurrency.model.CoinSnapshot;
@@ -19,6 +19,7 @@ import com.manifest.concurrency.state.UnsafeCoinState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,9 +36,11 @@ public class SimulationService {
     private final ExpectedResultCalculator expectedResultCalculator;
     private final TaskGenerator taskGenerator;
     private final SimulationEngine simulationEngine;
+    private final BenchmarkEngine benchmarkEngine;
     private final ReentrantLock simulationLock = new ReentrantLock();// AtomicBoolean??
     private final AtomicReference<SimulationResult> latestStats = new AtomicReference<>();
     private final AtomicReference<List<CoinSnapshot>> latestCoin = new AtomicReference<>();
+
 
     public SimulationResult simulate(int updates, int workers, long seed, ThreadMode threadMode) {
         if (!simulationLock.tryLock()) {
@@ -56,18 +59,13 @@ public class SimulationService {
             List<PriceUpdateTask> tasks = taskGenerator.generate(updates, seed);
 
             // Calculate expected results
-            // we may use CoinSnapshot instead of ExpectedCoinResponse ???
             Map<String, ExpectedCoinResponse> expected = expectedResultCalculator.calculateExpectedResult(tasks);
 
-            // Create TaskQueue
+            // Create TaskQueues
             TaskQueue unsafeQueue = new TaskQueue(tasks.size() + workers);
             TaskQueue safeQueue = new TaskQueue(tasks.size() + workers);
 
             // Start simulations
-            /*
-                - We may create Enum for different types of simulations ???
-                - i put 'expected' because we gonna use 'expected' for invariant violation report in SIMULATION ENGINE !!!
-             */
             RunStats unsafeRun = simulationEngine.run("UNSAFE", selectedThreadMode, tasks, workers, expected, new UnsafeCoinState(), new UnsafeTaskCounter(), unsafeQueue);
             RunStats safeRun = simulationEngine.run("SAFE", selectedThreadMode, tasks, workers, expected, new SafeCoinState(), new SafeTaskCounter(), safeQueue);
 
@@ -84,8 +82,8 @@ public class SimulationService {
 
             latestStats.set(result);
             latestCoin.set(result.safeRun().coins());
-            return result;
 
+            return result;
         } finally {
             simulationLock.unlock();
         }
@@ -104,6 +102,10 @@ public class SimulationService {
         if (result == null)
             throw new SimulationNotFoundException("Simulation not found");
         return result;
+    }
+
+    public BenchmarkReport benchmarks(BenchmarkRequest request) {
+        return benchmarkEngine.compare(request, taskGenerator, expectedResultCalculator);
     }
 }
 
