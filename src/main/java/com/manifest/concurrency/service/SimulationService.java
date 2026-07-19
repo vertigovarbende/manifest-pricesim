@@ -40,7 +40,7 @@ public class SimulationService {
     private final ReentrantLock simulationLock = new ReentrantLock();// AtomicBoolean??
     private final AtomicReference<SimulationResult> latestStats = new AtomicReference<>();
     private final AtomicReference<List<CoinSnapshot>> latestCoin = new AtomicReference<>();
-    private final List<Benchmark> benchmarks = new ArrayList<>();
+    private final AtomicReference<List<Benchmark>> benchmarks = new AtomicReference<>(new ArrayList<>());
 
     public SimulationResult simulate(int updates, int workers, long seed, ThreadMode threadMode) {
         if (!simulationLock.tryLock()) {
@@ -92,7 +92,7 @@ public class SimulationService {
                     .throughputPerSecond(safeRun.throughputPerSecond())
                     .invariantPassed(safeRun.invariant().valid())
                     .build();
-            benchmarks.add(benchmark);
+            benchmarks.get().add(benchmark);
 
             return result;
         } finally {
@@ -116,10 +116,10 @@ public class SimulationService {
     }
 
     public List<Benchmark> benchmarks() {
-        if (benchmarks.isEmpty()) {
+        List<Benchmark> benchmarks = this.benchmarks.get();
+        if (benchmarks == null)
             throw new SimulationNotFoundException("Simulation not found");
-        }
-        return List.copyOf(benchmarks);
+        return benchmarks;
     }
 }
 

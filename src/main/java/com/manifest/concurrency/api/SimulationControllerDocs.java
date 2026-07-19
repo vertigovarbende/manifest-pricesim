@@ -4,6 +4,7 @@ package com.manifest.concurrency.api;
 import com.manifest.concurrency.api.response.ConErrorResponse;
 import com.manifest.concurrency.api.response.ConResponse;
 import com.manifest.concurrency.engine.ThreadMode;
+import com.manifest.concurrency.metrics.stats.Benchmark;
 import com.manifest.concurrency.model.CoinSnapshot;
 import com.manifest.concurrency.metrics.stats.SimulationResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -109,6 +110,27 @@ public interface SimulationControllerDocs {
             )
     })
     ConResponse<SimulationResult> stats();
+
+    
+    @Operation(
+            summary = "Benchmark sonuçlarını getirir",
+            description = "Çalıştırılan simülasyonlara ait benchmark kayıtlarını (thread mode, işlenen " +
+                    "güncelleme sayısı, worker sayısı, geçen süre, throughput ve invariant sonucu) liste " +
+                    "olarak döner. Henüz hiçbir simülasyon çalıştırılmadıysa 404 döner."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Benchmark listesi başarıyla getirildi",
+                    content = @Content(schema = @Schema(implementation = Benchmark.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Henüz çalıştırılmış bir simülasyon bulunamadı",
+                    content = @Content(schema = @Schema(implementation = ConErrorResponse.class))
+            )
+    })
+    public ConResponse<List<Benchmark>> benchmark();
 }
 
 
