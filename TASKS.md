@@ -101,7 +101,7 @@ State package'i yeniden tasarlanacak.
 - [ ] ConcurrentHashMap + Lock yaklaşımı
 
 ---
-
+ 
 # TASK-4. Producer - Consumer Tasarımı
 
 Producer / Consumer mimarisi yeniden düzenlenecek.
@@ -128,6 +128,17 @@ Producer / Consumer mimarisi yeniden düzenlenecek.
 - [ ] Task tamamlanma kontrolü
 - [ ] Graceful shutdown
 - [ ] Bekleyen görevlerin tamamlanması
+
+### SimulationEngine
+
+- [ ] SimulationEngine sınıfı oluşturulması
+- [ ] SimulationEngine sınıfının Worker Thread yönetimi
+- [ ] SimulationEngine sınıfının Task üretimi
+- [ ] SimulationEngine sınıfının Task tamamlanma kontrolü
+- [ ] SimulationEngine sınıfının Graceful shutdown
+- [ ] SimulationEngine sınıfının Bekleyen görevlerin tamamlanması
+
+### Throughput hesabı
 
 ---
 
